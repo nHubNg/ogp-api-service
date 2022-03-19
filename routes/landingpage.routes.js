@@ -5,7 +5,7 @@ const path = require("path");
 // @description landing page route
 // @access public
 router.get("/", (req, res) => {
-	res.sendFile(path.join(__dirname + "../landingPage.html"));
+	res.sendFile(path.join(__dirname + "/landingPage.html"));
 });
 
 module.exports = router;
