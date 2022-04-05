@@ -30,7 +30,7 @@ const feedSchema = new Schema(
 		},
 		feed_image: {
 			type: String,
-			required: [true, "Feed image is required"],
+			// required: [true, "Feed image is required"],
 		},
 		feed_image_id: {
 			type: String,

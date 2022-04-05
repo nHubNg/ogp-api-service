@@ -43,7 +43,7 @@ const createNewFeed = async (req, res) => {
 
 		// check for media availability
 		if (!req.files) {
-			res.status(400).json({ msg: "Please select feed image and video files" });
+			res.status(400).json({ msg: "Please select a media file for this feed" });
 		} else {
 			// console.log("ImageFile::::", req.files);
 			// upload medias to cloudinary
