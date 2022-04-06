@@ -10,6 +10,7 @@ const verifyToken = async (req, res, next) => {
         .json({ msg: "You need to login to create a feed" });
 
     const decoded = jwt.verify(token, process.env.JWTsecret);
+    // console.log({decoded})
 
     req.user = decoded.user;
     req.token = token;

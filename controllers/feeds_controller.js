@@ -37,7 +37,11 @@ const createNewFeed = async (req, res) => {
 	try {
 		const { errors, isValid } = validateFeedData(req.body);
 		if (!isValid) {
-			return res.status(403).json(errors);
+			return res.status(400).json({
+				success: false,
+				msg: "check your feed data and try again",
+				errors,
+			});
 		}
 		const { feed_title, feed_description, tag } = req.body;
 
@@ -144,7 +148,11 @@ const createNewFeed = async (req, res) => {
 const getAllFeeds = async (req, res) => {
 	Feed.find({ isActive: true })
 		.sort({ date: -1 })
-		.then((feeds) => res.json(feeds))
+		.then((feeds) =>
+			res.status(200).json({
+				data: feeds,
+			})
+		)
 		.catch((err) =>
 			res.status(404).json({ nofeeds: "No feeds available at this time" })
 		);

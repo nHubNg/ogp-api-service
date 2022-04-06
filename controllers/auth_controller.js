@@ -32,7 +32,11 @@ const httpLoginUser = (req, res) => {
 						bcrypt.compare(password, user.password).then((isMatch) => {
 							if (isMatch) {
 								// generate token
-								let token = jwt.sign({ user }, process.env.JWTsecret, {
+								const payload = {
+									user,
+									isLoggedIn: true
+								};
+								let token = jwt.sign(payload, process.env.JWTsecret, {
 									expiresIn: "365d",
 								});
 
@@ -65,7 +69,11 @@ const httpLoginUser = (req, res) => {
 				bcrypt.compare(password, user.password).then((isMatch) => {
 					if (isMatch) {
 						// generate token
-						let token = jwt.sign({ user }, process.env.JWTsecret, {
+						const payload = {
+							user,
+							isLoggedIn: true
+						};
+						let token = jwt.sign(payload, process.env.JWTsecret, {
 							expiresIn: "365d",
 						});
 
