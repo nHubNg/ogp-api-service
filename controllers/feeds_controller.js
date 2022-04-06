@@ -42,9 +42,7 @@ const createNewFeed = async (req, res) => {
 		const { feed_title, feed_description, tag } = req.body;
 
 		// check for media availability
-		if (!req.files) {
-			res.status(400).json({ msg: "Please select a media file for this feed" });
-		} else {
+		if (req.files) {
 			// console.log("ImageFile::::", req.files);
 			// upload medias to cloudinary
 			const uploader = async (path) =>
@@ -65,8 +63,8 @@ const createNewFeed = async (req, res) => {
 				*/
 
 			// console.log("Index zero for feed's image:::",urls[0])
-			let feed_videos = urls.splice(1);
-			// console.log("feed video::::", feed_videos);
+			let feed_media = urls;
+			// console.log("feed medias::::", feed_media);
 			/*
 				 remove the zero index in URL and set to feed's image property (url and id)
 				 then set what's left in the array to feed's video
@@ -76,9 +74,7 @@ const createNewFeed = async (req, res) => {
 				feed_title,
 				feed_description,
 				tag,
-				feed_image: urls[0].url,
-				feed_image_id: urls[0].id,
-				feed_video: feed_videos,
+				feed_media,
 				user: req.user._id,
 			});
 
@@ -91,7 +87,37 @@ const createNewFeed = async (req, res) => {
 					`${tag} is not a valid tag type`
 				);
 			} else {
-				// console.log("new Feed:::", newFeed);
+				// console.log("new Feed With Media:::", newFeed);
+				if (!newFeed)
+					return res
+						.status(500)
+						.json({ success: false, msg: "Problem creating feed" });
+				await newFeed.save();
+
+				return res.status(201).json({
+					success: true,
+					msg: "Feed created successfully",
+					newFeed,
+				});
+			}
+		} else {
+			const newFeed = new Feed({
+				feed_title,
+				feed_description,
+				tag,
+				user: req.user._id,
+			});
+
+			// validate tag before proceeding
+			let error = newFeed.validateSync();
+			// console.log(error);
+			if (error) {
+				assert.equal(
+					error.errors["tag"].message,
+					`${tag} is not a valid tag type`
+				);
+			} else {
+				// console.log("new Feed Without No Media:::", newFeed);
 
 				if (!newFeed)
 					return res

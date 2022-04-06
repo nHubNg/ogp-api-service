@@ -25,17 +25,15 @@ const feedSchema = new Schema(
 				"Peace and Security",
 			],
 		},
-		feed_media: {
-			type: String,
-		},
-		feed_image: {
-			type: String,
-			// required: [true, "Feed image is required"],
-		},
-		feed_image_id: {
-			type: String,
-		},
-		feed_video: [],
+		feed_media: [],
+		// // feed_image: {
+		// // 	type: String,
+		// 	required: [true, "Feed image is required"],
+		// },
+		// feed_image_id: {
+		// 	type: String,
+		// },
+		// feed_video: [],
 		vote: {
 			type: String,
 			enum: ["like", "unLike"],
