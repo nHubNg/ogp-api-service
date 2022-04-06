@@ -34,6 +34,7 @@ const cloudinaryMediaUpload = async (file, folder) => {
 
 //:::::::::::::::::::::create new feed::::::::::::::::::::::::::
 const createNewFeed = async (req, res) => {
+	console.log("Here",req.body)
 	try {
 		const { errors, isValid } = validateFeedData(req.body);
 		if (!isValid) {

@@ -2,6 +2,7 @@ const validator = require("validator");
 const isEmpty = require("../validation/isEmpty");
 
 module.exports = function validateFeedData(data) {
+	console.log(data);
 	let errors = {};
 	data.feed_title = !isEmpty(data.feed_title) ? data.feed_title : "";
 	data.feed_description = !isEmpty(data.feed_description)
