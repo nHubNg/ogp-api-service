@@ -25,7 +25,9 @@ const feedSchema = new Schema(
 				"Peace and Security",
 			],
 		},
-		feed_media: [],
+		feed_media: {
+			type: String,
+		},
 		// // feed_image: {
 		// // 	type: String,
 		// 	required: [true, "Feed image is required"],

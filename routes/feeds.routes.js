@@ -15,7 +15,7 @@ const auth = require("../middlewares/authVerifier");
 //@Register Route POST api/v1/feed
 //@description create new feed
 //@access private
-router.post("/", auth, upload.array("feed_media"), createNewFeed);
+router.post("/", auth, createNewFeed);
 
 // @route GET api/v1/feed
 // @description get all feeds
