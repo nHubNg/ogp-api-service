@@ -52,36 +52,53 @@ const createNewUser = async (req, res) => {
 						bcrypt.hash(newUser.password, salt, async (err, hash) => {
 							if (err) throw err;
 							newUser.password = hash;
-							const mailInfo = await welcomeEmail(
-								req,
-								newUser.first_name,
-								newUser.email,
-								newUser.secret_token
-							);
-							// console.log("MAIL_INFO", mailInfo.accepted.length);
-							if (mailInfo.accepted.length === 0) {
-								return res.status(500).json({
-									success: false,
-									msg: "Verification email sending failed, please try again",
-								});
-							} else {
-								await newUser
-									.save()
-									.then(async (user) => {
-										res.status(201).json({
-											success: true,
-											msg: "User registered successfully, check your email for verification",
-											user,
-										});
+
+							await newUser
+								.save()
+								.then(async (user) => {
+									res.status(201).json({
+										success: true,
+										msg: "User registered successfully, check your email for verification",
+										user,
+									});
+								})
+								.catch((err) =>
+									res.status(500).json({
+										success: false,
+										msg: "User registration failed",
+										err,
 									})
-									.catch((err) =>
-										res.status(500).json({
-											success: false,
-											msg: "User registration failed",
-											err,
-										})
-									);
-							}
+								);
+							// const mailInfo = await welcomeEmail(
+							// 	req,
+							// 	newUser.first_name,
+							// 	newUser.email,
+							// 	newUser.secret_token
+							// );
+							// console.log("MAIL_INFO", mailInfo.accepted.length);
+							// if (mailInfo.accepted.length === 0) {
+							// 	return res.status(500).json({
+							// 		success: false,
+							// 		msg: "Verification email sending failed, please try again",
+							// 	});
+							// } else {
+							// 	await newUser
+							// 		.save()
+							// 		.then(async (user) => {
+							// 			res.status(201).json({
+							// 				success: true,
+							// 				msg: "User registered successfully, check your email for verification",
+							// 				user,
+							// 			});
+							// 		})
+							// 		.catch((err) =>
+							// 			res.status(500).json({
+							// 				success: false,
+							// 				msg: "User registration failed",
+							// 				err,
+							// 			})
+							// 		);
+							// }
 						});
 					});
 				}
