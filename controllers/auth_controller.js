@@ -5,6 +5,7 @@ const { User } = require("../models/users");
 const { Admin } = require("../models/admin");
 const validateLoginData = require("../validation/login");
 const { forgotPasswordMail } = require("../utils/Mailings");
+const open = require("open");
 
 //:::::::::::::::::::Login:::::::::::::::::::::::::::
 const httpLoginUser = (req, res) => {
@@ -34,7 +35,7 @@ const httpLoginUser = (req, res) => {
 								// generate token
 								const payload = {
 									user,
-									isLoggedIn: true
+									isLoggedIn: true,
 								};
 								let token = jwt.sign(payload, process.env.JWTsecret, {
 									expiresIn: "365d",
@@ -71,7 +72,7 @@ const httpLoginUser = (req, res) => {
 						// generate token
 						const payload = {
 							user,
-							isLoggedIn: true
+							isLoggedIn: true,
 						};
 						let token = jwt.sign(payload, process.env.JWTsecret, {
 							expiresIn: "365d",
@@ -111,12 +112,17 @@ const confirmEmail = async (req, res) => {
 		return res.status(400).json({ msg: "No secret token in params" });
 
 	const userWithToken = await User.findOne({ secret_token: secretToken });
-	if (!userWithToken) return res.status(404).json({ msg: "Invalid token" });
+	if (!userWithToken)
+		return res
+			.status(404)
+			.json({ msg: "Account already verified or token expired" });
+	await open("https://opengovweb.vercel.app/auth");
 
 	userWithToken.isVerified = true;
 	userWithToken.secret_token = undefined;
 	await userWithToken.save();
 
+	await open("https://opengovweb.vercel.app/auth");
 	return res.status(200).json({
 		msg: "User account verified. You can now login",
 	});
