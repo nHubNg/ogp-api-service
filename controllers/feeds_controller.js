@@ -266,14 +266,17 @@ const commentFeed = async (req, res) => {
 
 // :::::::::::::Get All Comment That Belongs To A Feed::::::::::::::::
 const allComment = async (req, res) => {
+	// console.log(req.params.id)
 	await Feed.findById(req.params.id).then((feed) => {
 		if (!feed) return res.status(404).json({ msg: "No feed with this ID" });
+		let feedId = req.params.id
 		let allComment = feed.comments;
 		let commentCount = allComment.length;
 		// console.log({ commentCount });
 		return res.status(200).json({
 			msg: "All comments",
 			commentCount,
+			feedId,
 			data: allComment,
 		});
 	});
