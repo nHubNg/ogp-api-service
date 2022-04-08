@@ -15,7 +15,7 @@ router.post("/login", httpLoginUser);
 //@Confirm Mail Route POST api/v1/confirm-mail
 //@description New users email verification
 //@access public
-router.post("/confirm-mail/:token", confirmEmail);
+router.get("/confirm-mail/:token", confirmEmail);
 
 //@Forgot Password Route PUT api/v1/forgot-password
 //@description paswword reset link
