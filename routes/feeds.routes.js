@@ -7,6 +7,7 @@ const {
   updateFeed,
   deleteFeed,
   commentFeed,
+  allComment,
   likeUnlikeFeed,
 } = require("../controllers/feeds_controller");
 const upload = require("../configs/multer");
@@ -41,6 +42,11 @@ router.delete("/delete/:id", auth, deleteFeed);
 // @description comment a feed
 // @access private
 router.post("/comment/:id", auth, commentFeed);
+
+// @route GET api/v1/feed/:comment_ID
+// @description: get all comment belonging to a particular feed
+// @access public
+router.get("/comment/:id", allComment);
 
 // @route POST api/v1/feed/vote/:post_ID
 // @description like-unlike post

@@ -34,7 +34,7 @@ const cloudinaryMediaUpload = async (file, folder) => {
 
 //:::::::::::::::::::::create new feed::::::::::::::::::::::::::
 const createNewFeed = async (req, res) => {
-	console.log("Here",req.body)
+	console.log("Here", req.body);
 	try {
 		const { errors, isValid } = validateFeedData(req.body);
 		if (!isValid) {
@@ -89,7 +89,7 @@ const createNewFeed = async (req, res) => {
 const getAllFeeds = async (req, res) => {
 	Feed.find({ isActive: true })
 		.sort({ date: -1 })
-		.then((feeds) => 
+		.then((feeds) =>
 			res.status(200).json({
 				data: feeds,
 			})
@@ -242,6 +242,7 @@ const commentFeed = async (req, res) => {
 					const newComment = {
 						comment_description: req.body.comment_description,
 						user: req.user._id,
+						user_name: req.user.first_name,
 					};
 					feed.comments.unshift(newComment);
 					feed
@@ -261,6 +262,21 @@ const commentFeed = async (req, res) => {
 			})
 			.catch((err) => res.status(404).json({ nofeed: "No feed with this ID" }));
 	}
+};
+
+// :::::::::::::Get All Comment That Belongs To A Feed::::::::::::::::
+const allComment = async (req, res) => {
+	await Feed.findById(req.params.id).then((feed) => {
+		if (!feed) return res.status(404).json({ msg: "No feed with this ID" });
+		let allComment = feed.comments;
+		let commentCount = allComment.length;
+		// console.log({ commentCount });
+		return res.status(200).json({
+			msg: "All comments",
+			commentCount,
+			data: allComment,
+		});
+	});
 };
 
 //::::::::::::::::::::Like And Unlike a Feed::::::::::::::::::::::::::::
@@ -293,12 +309,15 @@ const likeUnlikeFeed = async (req, res) => {
 						feed.likes.unshift(vote_data);
 						feed
 							.save()
-							.then((feed) =>
+							.then((feed) => {
+								let numberOfLikes = feed.likes.length;
+								console.log(numberOfLikes);
 								res.status(200).json({
 									msg: "feed liked",
+									numberOfLikes,
 									feed,
-								})
-							)
+								});
+							})
 							.catch((err) =>
 								res.status(500).json({ msg: "Like failed " + err })
 							);
@@ -307,12 +326,15 @@ const likeUnlikeFeed = async (req, res) => {
 						feed.unLikes.unshift(vote_data);
 						feed
 							.save()
-							.then((feed) =>
+							.then((feed) => {
+								let numberOfUnLikes = feed.unLikes.length;
+								console.log(numberOfUnLikes);
 								res.status(200).json({
 									msg: "feed unLiked",
+									numberOfUnLikes,
 									feed,
-								})
-							)
+								});
+							})
 							.catch((err) =>
 								res.status(500).json({ msg: "unLike failed " + err })
 							);
@@ -330,12 +352,15 @@ const likeUnlikeFeed = async (req, res) => {
 					feed.unLikes.unshift(vote_data);
 					feed
 						.save()
-						.then((feed) =>
+						.then((feed) => {
+							let numberOfUnLikes = feed.unLikes.length;
+							console.log(numberOfUnLikes);
 							res.status(200).json({
 								msg: "feed unliked",
+								numberOfUnLikes,
 								feed,
-							})
-						)
+							});
+						})
 						.catch((err) =>
 							res.status(500).json({ msg: "Unlike failed " + err })
 						);
@@ -353,12 +378,15 @@ const likeUnlikeFeed = async (req, res) => {
 					feed.likes.unshift(vote_data);
 					feed
 						.save()
-						.then((feed) =>
+						.then((feed) => {
+							let numberOfLikes = feed.likes.length;
+							console.log(numberOfLikes);
 							res.status(200).json({
 								msg: "feed liked",
+								numberOfLikes,
 								feed,
-							})
-						)
+							});
+						})
 						.catch((err) =>
 							res.status(500).json({ msg: "like failed " + err })
 						);
@@ -377,5 +405,6 @@ module.exports = {
 	updateFeed,
 	deleteFeed,
 	commentFeed,
+	allComment,
 	likeUnlikeFeed,
 };

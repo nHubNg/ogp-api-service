@@ -68,6 +68,9 @@ const feedSchema = new Schema(
 					type: mongoose.Types.ObjectId,
 					ref: "user",
 				},
+				user_name: {
+					type: String,
+				},
 				comment_description: {
 					type: String,
 					required: true,
