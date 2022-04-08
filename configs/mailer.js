@@ -29,6 +29,7 @@ const smtpTransport = createTransport({
 	},
 });
 
+
 const sendEmail = async (from, to, subject, html) => {
 	return new Promise((resolve, reject) => {
 		smtpTransport.sendMail({ from, to, subject, html }, (err, info) => {
@@ -36,8 +37,8 @@ const sendEmail = async (from, to, subject, html) => {
 				console.log("mail_error ==>", err);
 				return reject(err);
 			}
-			// console.log("mail_info ==>", info);
 			resolve(info);
+			console.log({info});
 		});
 	});
 };
