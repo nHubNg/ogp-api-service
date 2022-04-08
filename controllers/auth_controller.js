@@ -116,16 +116,14 @@ const confirmEmail = async (req, res) => {
 		return res
 			.status(404)
 			.json({ msg: "Account already verified or token expired" });
-	await open("https://opengovweb.vercel.app/auth");
 
 	userWithToken.isVerified = true;
 	userWithToken.secret_token = undefined;
 	await userWithToken.save();
-
 	await open("https://opengovweb.vercel.app/auth");
-	return res.status(200).json({
-		msg: "User account verified. You can now login",
-	});
+	// return res.status(200).json({
+	// 	msg: "User account verified. You can now login",
+	// });
 };
 
 //:::::::::::::::::::Forgot Password:::::::::::::::::::
