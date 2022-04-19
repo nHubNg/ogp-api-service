@@ -52,8 +52,6 @@
 # contributors
 
     - AS Muhammad
-    - Charles Fyaklek
-
 # Run
 
     - git clone https://github.com/nHub-Foundation/ogp_plateau_api_master.git

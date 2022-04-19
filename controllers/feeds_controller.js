@@ -1,4 +1,5 @@
 const { Feed } = require("../models/feeds");
+const { Comment } = require("../models/comment");
 const assert = require("assert");
 const cloudinary = require("cloudinary").v2;
 const cloudinarySetup = require("../configs/cloudinary");
@@ -52,6 +53,8 @@ const createNewFeed = async (req, res) => {
 			feed_description,
 			tag,
 			feed_media,
+			likeCount: 0,
+			unLikeCount: 0,
 			user: req.user._id,
 		});
 
@@ -88,27 +91,38 @@ const createNewFeed = async (req, res) => {
 //:::::::::::::::::::Get all feed::::::::::::::::::::::::::
 const getAllFeeds = async (req, res) => {
 	Feed.find({ isActive: true })
+		.populate("comments", ["comment_description", "user_name", "date"])
 		.sort({ date: -1 })
-		.then((feeds) =>
+		.then((feeds) => {
+			feeds.forEach((feed) => {
+				feed.likeCount =
+					feed.likes.length > 0 ? feed.likes.length : feed.likeCount;
+				feed.unLikeCount =
+					feed.unLikes.length > 0 ? feed.unLikes.length : feed.unLikeCount;
+			});
 			res.status(200).json({
 				data: feeds,
-			})
-		)
+			});
+		})
 		.catch((err) =>
-			res.status(404).json({ nofeeds: "No feeds available at this time" })
+			res.status(404).json({ msg: "No feeds available at this time" })
 		);
 };
 
 //:::::::::::::::Get single feed by ID::::::::::::::::::::
 const getFeedByID = async (req, res) => {
 	if (!isValidObjectId(req.params.id)) {
-		res.json({ message: "invalid feed Id" });
+		res.json({ msg: "invalid feed Id" });
 	} else {
 		// console.log("feedID:::", req.params.id);
 		try {
-			let foundFeed = await Feed.findById(req.params.id);
+			let foundFeed = await Feed.findById(req.params.id).populate("comments", [
+				"comment_description",
+				"user_name",
+				"date",
+			]);
 			if (!foundFeed)
-				return res.status(404).json({ nofeed: "No feed with this ID" });
+				return res.status(404).json({ msg: "No feed with this ID" });
 			else {
 				// console.log("foundFeed:::", foundFeed);
 				feedVotes(foundFeed._id).then((votes) => {
@@ -120,12 +134,12 @@ const getFeedByID = async (req, res) => {
 						un_likes: votes[3],
 						male_unlike: votes[4],
 						female_unlike: votes[5],
-						foundFeed,
+						data: foundFeed,
 					});
 				});
 			}
-		} catch (error) {
-			res.status(404).json({ nofeed: "No feed with this ID...", error });
+		} catch (err) {
+			res.status(404).json({ msg: "No feed with this ID...", err });
 		}
 	}
 };
@@ -201,9 +215,7 @@ const deleteFeed = async (req, res) => {
 	await Feed.findById(req.params.id)
 		.then(async (feed) => {
 			if (req.user.isAdmin === false) {
-				return res
-					.status(401)
-					.json({ notauthorized: "Only admin can delete feeds" });
+				return res.status(401).json({ msg: "Only admin can delete feeds" });
 			} else {
 				feed.isActive = false;
 				await feed
@@ -211,73 +223,81 @@ const deleteFeed = async (req, res) => {
 					.then(() =>
 						res.status(200).json({
 							success: true,
-							message: "Feed deleted successfully",
+							msg: "Feed deleted successfully",
 						})
 					)
 					.catch((err) =>
 						res.status(500).json({
 							success: false,
-							message: "Feed deletion failed",
+							msg: "Feed deletion failed",
+							err,
 						})
 					);
 			}
 		})
-		.catch((err) => res.status(404).json({ nofeed: "No feed with this id" }));
+		.catch((err) => res.status(404).json({ msg: "No feed with this id", err }));
 };
 
 //::::::::::::::::::::comment on a Feed:::::::::::::::::::::::::::
 const commentFeed = async (req, res) => {
 	const { errors, isValid } = validateCommentData(req.body);
 	if (!isValid) {
-		return res.status(400).json(errors);
+		return res.status(400).json({
+			msg: "Invalid feed data",
+			errors,
+		});
 	}
 
 	if (!isValidObjectId(req.params.id)) {
-		res.json({ message: "invalid feed Id" });
+		res.json({ msg: "invalid feed Id" });
 	} else {
 		await Feed.findById(req.params.id)
 			.then((feed) => {
 				if (feed) {
 					//  new comment instance
-					const newComment = {
+					const newComment = new Comment({
 						comment_description: req.body.comment_description,
+						feed: req.params.id,
 						user: req.user._id,
 						user_name: req.user.first_name,
-					};
-					feed.comments.unshift(newComment);
-					feed
+					});
+					newComment
 						.save()
-						.then((feed) =>
+						.then(async (comment) => {
+							await feed.comments.push(newComment._id);
+							feed.save();
 							res.status(201).json({
 								msg: "comment successfull",
-								feed,
-							})
-						)
+								comment,
+							});
+							// console.log(feed.comments);
+						})
 						.catch((err) =>
-							res.status(500).json({ message: "Feed commenting failed " + err })
+							res.status(500).json({ msg: "Feed commenting failed", err })
 						);
 				} else {
-					return res.status(404).json({ nofeed: "No feed with this ID" });
+					return res.status(404).json({ msg: "No feed with this ID" });
 				}
 			})
-			.catch((err) => res.status(404).json({ nofeed: "No feed with this ID" }));
+			.catch((err) =>
+				res.status(404).json({ msg: "No feed with this ID", err })
+			);
 	}
 };
 
 // :::::::::::::Get All Comment That Belongs To A Feed::::::::::::::::
 const allComment = async (req, res) => {
-	// console.log(req.params.id)
-	await Feed.findById(req.params.id).then((feed) => {
-		if (!feed) return res.status(404).json({ msg: "No feed with this ID" });
-		let feedId = req.params.id
-		let allComment = feed.comments;
-		let commentCount = allComment.length;
-		// console.log({ commentCount });
+	await Comment.find({ feed: req.params.id }).then((comments) => {
+		// console.log({ comments });
+		if (!comments.length > 0)
+			return res.status(404).json({ msg: "No comments for this feed yet" });
+		let feedId = req.params.id;
+		let commentCount = comments.length;
 		return res.status(200).json({
 			msg: "All comments",
 			commentCount,
 			feedId,
-			data: allComment,
+			data: comments,
 		});
 	});
 };
@@ -287,7 +307,6 @@ const likeUnlikeFeed = async (req, res) => {
 	await Feed.findById(req.params.id)
 		.then((feed) => {
 			if (feed) {
-				let vote = req.body.vote;
 				let vote_data = {
 					user: req.user._id,
 					gender: req.user.gender,
@@ -295,7 +314,9 @@ const likeUnlikeFeed = async (req, res) => {
 				// console.log("vote_data::", vote_data);
 				// if the liker is also the creator of the feed
 				if (feed.user.toString() === req.user._id) {
-					return res.json({ message: "You can not like your own feed" });
+					return res
+						.status(403)
+						.json({ msg: "You can not like your own feed" });
 				}
 
 				//To initiate vote: check if user has never voted the feed
@@ -305,43 +326,22 @@ const likeUnlikeFeed = async (req, res) => {
 					feed.unLikes.filter(
 						(unlike) => unlike.user.toString() === req.user._id
 					).length === 0
-					// if both equals true
 				) {
-					// if user is liking feed
-					if (vote == "like") {
-						feed.likes.unshift(vote_data);
-						feed
-							.save()
-							.then((feed) => {
-								let numberOfLikes = feed.likes.length;
-								console.log(numberOfLikes);
-								res.status(200).json({
-									msg: "feed liked",
-									numberOfLikes,
-									feed,
-								});
-							})
-							.catch((err) =>
-								res.status(500).json({ msg: "Like failed " + err })
-							);
-						// otherwise user must be trying to unlike feed
-					} else {
-						feed.unLikes.unshift(vote_data);
-						feed
-							.save()
-							.then((feed) => {
-								let numberOfUnLikes = feed.unLikes.length;
-								console.log(numberOfUnLikes);
-								res.status(200).json({
-									msg: "feed unLiked",
-									numberOfUnLikes,
-									feed,
-								});
-							})
-							.catch((err) =>
-								res.status(500).json({ msg: "unLike failed " + err })
-							);
-					}
+					// if both equals true, then user must be trying to like feed
+					feed.likes.unshift(vote_data);
+					feed
+						.save()
+						.then((feed) => {
+							feed.likeCount = feed.likes.length;
+							feed.unLikeCount =
+								feed.unLikes.length > 0 ? feed.unLikes.length : 0;
+							console.log(numberOfLikes);
+							res.status(200).json({
+								msg: "feed liked",
+								feed,
+							});
+						})
+						.catch((err) => res.status(500).json({ msg: "Like failed", err }));
 				} else if (
 					feed.likes.filter((like) => like.user.toString() === req.user._id)
 						.length > 0 // user already liked post, must be trying to unlike instead
@@ -356,16 +356,15 @@ const likeUnlikeFeed = async (req, res) => {
 					feed
 						.save()
 						.then((feed) => {
-							let numberOfUnLikes = feed.unLikes.length;
-							console.log(numberOfUnLikes);
+							feed.likeCount = feed.likes.length > 0 ? feed.likes.length : 0;
+							feed.unLikeCount = feed.unLikes.length;
 							res.status(200).json({
 								msg: "feed unliked",
-								numberOfUnLikes,
 								feed,
 							});
 						})
 						.catch((err) =>
-							res.status(500).json({ msg: "Unlike failed " + err })
+							res.status(500).json({ msg: "Unlike failed", err })
 						);
 				} else if (
 					feed.unLikes.filter(
@@ -382,23 +381,23 @@ const likeUnlikeFeed = async (req, res) => {
 					feed
 						.save()
 						.then((feed) => {
-							let numberOfLikes = feed.likes.length;
-							console.log(numberOfLikes);
+							feed.likeCount = feed.likes.length;
+							feed.unLikeCount =
+								feed.unLikes.length > 0 ? feed.unLikes.length : 0;
 							res.status(200).json({
 								msg: "feed liked",
-								numberOfLikes,
 								feed,
 							});
 						})
-						.catch((err) =>
-							res.status(500).json({ msg: "like failed " + err })
-						);
+						.catch((err) => res.status(500).json({ msg: "like failed", err }));
 				}
 			} else {
-				return res.status(404).json({ nofeed: "No feed with this ID" });
+				return res.status(404).json({ msg: "No feed with this ID" });
 			}
 		})
-		.catch((err) => res.status(403).json({ msg: "Problem voting on feed" }));
+		.catch((err) =>
+			res.status(403).json({ msg: "Problem voting on feed", err })
+		);
 };
 
 module.exports = {

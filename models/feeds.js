@@ -26,16 +26,9 @@ const feedSchema = new Schema(
 			],
 		},
 		feed_media: {
-			type: String,
+			type: [String],
+			required: [true, "An image or video file is required to create a feed"],
 		},
-		// // feed_image: {
-		// // 	type: String,
-		// 	required: [true, "Feed image is required"],
-		// },
-		// feed_image_id: {
-		// 	type: String,
-		// },
-		// feed_video: [],
 		vote: {
 			type: String,
 			enum: ["like", "unLike"],
@@ -62,39 +55,12 @@ const feedSchema = new Schema(
 				},
 			},
 		],
+		likeCount: Number,
+		unLikeCount: Number,
 		comments: [
 			{
-				user: {
-					type: mongoose.Types.ObjectId,
-					ref: "user",
-				},
-				user_name: {
-					type: String,
-				},
-				comment_description: {
-					type: String,
-					required: true,
-				},
-				date: {
-					type: Date,
-					default: Date.now,
-				},
-				replies: [
-					{
-						user: {
-							type: mongoose.Types.ObjectId,
-							ref: "user",
-						},
-						reply_text: {
-							type: String,
-							required: true,
-						},
-						date: {
-							type: Date,
-							default: Date.now,
-						},
-					},
-				],
+				type: mongoose.Types.ObjectId,
+				ref: "comment",
 			},
 		],
 		isActive: {

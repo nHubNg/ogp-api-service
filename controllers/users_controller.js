@@ -174,7 +174,7 @@ const deleteUser = async (req, res) => {
 	User.findByIdAndDelete(req.user._id).then(() => {
 		res.status(200).json({
 			success: true,
-			message: "Your account has been deleted successfully",
+			msg: "Your account has been deleted successfully",
 		});
 	});
 };
