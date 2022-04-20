@@ -313,11 +313,11 @@ const likeUnlikeFeed = async (req, res) => {
 				};
 				// console.log("vote_data::", vote_data);
 				// if the liker is also the creator of the feed
-				if (feed.user.toString() === req.user._id) {
-					return res
-						.status(403)
-						.json({ msg: "You can not like your own feed" });
-				}
+				// if (feed.user.toString() === req.user._id) {
+				// 	return res
+				// 		.status(403)
+				// 		.json({ msg: "You can not like your own feed" });
+				// }
 
 				//To initiate vote: check if user has never voted the feed
 				if (
@@ -335,9 +335,9 @@ const likeUnlikeFeed = async (req, res) => {
 							feed.likeCount = feed.likes.length;
 							feed.unLikeCount =
 								feed.unLikes.length > 0 ? feed.unLikes.length : 0;
-							console.log(numberOfLikes);
 							res.status(200).json({
 								msg: "feed liked",
+								isLiked: true,
 								feed,
 							});
 						})
@@ -360,6 +360,7 @@ const likeUnlikeFeed = async (req, res) => {
 							feed.unLikeCount = feed.unLikes.length;
 							res.status(200).json({
 								msg: "feed unliked",
+								isLiked: false,
 								feed,
 							});
 						})
@@ -386,6 +387,7 @@ const likeUnlikeFeed = async (req, res) => {
 								feed.unLikes.length > 0 ? feed.unLikes.length : 0;
 							res.status(200).json({
 								msg: "feed liked",
+								isLiked: true,
 								feed,
 							});
 						})
